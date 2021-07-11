@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>환율 계산</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        function requestExchangeRate() {
+            var currency = $("#currencies").val();
+
+	        $.ajax({
+	            url: "/exrate/api/exchangerate/" + currency,
+	            success : function(data) {
+                    if(data.success) {
+                        $('#exchangeRate').text(data.exchangeRate);
+                        $('#currency').text(data.currency);
+                    } else {
+                        alert("You have exceeded the maximum rate limitation allowed on your subscription plan. Please refer to the \"Rate Limits\" section of the API Documentation for details. ");
+                    }
+                },
+                error: function onError (error) {
+                    console.error(error);
+                }
+            });
+	    }
+
+	    function calculation() {
+	        var currency = $("#currency").text();
+	        var exchangeRate = $("#exchangeRate").text().replace(",", "");
+            var input = $("#input").val();
+
+            if(input == "" || input <= 0 || input > 10000) {
+                alert('송금액이 바르지 않습니다.');
+                $("#result").html("");
+                return;
+            }
+
+            var calculationRequest = {
+                exchangeRate: exchangeRate,
+                currency: currency,
+                amounts: input
+            };
+
+            $.ajax({
+	            url: "/exrate/api/exchangerate/calculation",
+	            data: JSON.stringify(calculationRequest),
+	            async: false,
+                type: "POST",
+                contentType: 'application/json; charset=utf-8',
+                success : function(data) {
+                    $("#result").html(data);
+                },
+                error: function(error) {
+                    console.error(error);
+                }
+            });
+	    }
+    </script>
+</head>
+<body>
+    <h1>환율 계산</h1>
+
+    <div>
+        송금국가: 미국(USD)
+    </div>
+
+    <div>
+        수취국가:
+        <select id="currencies" onchange="requestExchangeRate()">
+            <option value='KRW' title='Republic of Korea'>한국(KRW)</option>
+            <option value='JPY' title='Japan'>일본(JPY)</option>
+            <option value='PHP' title='Republic of the Philippines'>필리핀(PHP)</option>
+        </select>
+    </div>
+
+    <div>
+        환율: <span id="exchangeRate" th:text="${data.exchangeRate}"></span> <span id="currency" th:text="${data.currency}"></span>/USD
+    </div>
+
+    <div>
+        송금액:
+        <input id="input" placeholder="Please enter text" type="text"> USD
+    </div>
+
+    <div>
+        <button type="button" onclick="calculation()">Submit</button>
+    </div>
+
+    <br/>
+    <div id="result">
+
+    </div>
+
+</body>
+</html>

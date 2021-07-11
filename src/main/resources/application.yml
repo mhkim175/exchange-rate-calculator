@@ -1,0 +1,8 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /exrate
+
+openapi:
+  base-url: http://www.apilayer.net/api/live
+  service-key: service-key
